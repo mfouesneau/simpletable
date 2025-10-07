@@ -133,5 +133,5 @@ def test_dataframe_integration_write_read(tmp_path: Path):
 
     back = ecsv.read(str(out))
     pdt.assert_frame_equal(back, df, check_dtype=False)
-    assert back.attrs.get("NAME") == "DFIntegration"
-    assert back.attrs.get("purpose") == "integration"
+    assert back.attrs.get("NAME") == "DFIntegration"  # pyright: ignore
+    assert back.attrs.get("purpose") == "integration"  # pyright: ignore
