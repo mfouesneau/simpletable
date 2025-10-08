@@ -11,4 +11,9 @@ wheels/
 
 # locks/stores etc
 *.lock
-DS_Store
+.DS_Store
+.python-version
+
+# IDE files
+.idea/
+.vscode/
