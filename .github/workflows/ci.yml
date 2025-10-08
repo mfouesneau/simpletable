@@ -1,0 +1,36 @@
+name: unittests
+
+on:
+  push:
+    paths-ignore:
+      - "docs/**"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.9", "3.10", "3.11", "3.12", "3.13"]
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install ".[testing]"
+      - name: Install the latest version of ruff
+        uses: astral-sh/ruff-action@v3
+        with:
+          version: "latest"
+      - name: ruff check
+        run: |
+          ruff check --fix
+      - name: ruff format
+        run: |
+          ruff format --diff
+      - name: Running quick tests
+        run: |
+          python3 -m unittest unittests/test_quick.py
