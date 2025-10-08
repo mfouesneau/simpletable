@@ -3318,9 +3318,9 @@ class AstroTable(SimpleTable):
             indices or conditional sequence of matching values
         """
 
-        assert (self._ra_name is not None) & (
-            self._dec_name is not None
-        ), "Coordinate columns not set."
+        assert (self._ra_name is not None) & (self._dec_name is not None), (
+            "Coordinate columns not set."
+        )
 
         ra0 = self.get_RA()
         dec0 = self.get_DEC()
