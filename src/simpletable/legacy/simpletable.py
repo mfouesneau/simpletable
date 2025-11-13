@@ -33,8 +33,6 @@ package.
     # export the initial subtable to a new file
 """
 
-from __future__ import absolute_import, division, print_function
-
 __version__ = "3.0"
 __all__ = ["AstroHelpers", "AstroTable", "SimpleTable", "stats"]
 
@@ -265,20 +263,20 @@ def _fits_generate_header(tab):
 
     # names units and comments
     for e, k in enumerate(tab.keys()):
-        cards.append(("TTYPE{0:d}".format(e + 1), k, tab._desc.get(k, "")))
+        cards.append((f"TTYPE{e + 1:d}", k, tab._desc.get(k, "")))
         u = tab._units.get(k, "")
         if u not in ["", "None", None]:
             cards.append(
                 (
-                    "TUNIT{0:d}".format(e + 1),
+                    f"TUNIT{e + 1:d}",
                     tab._units.get(k, ""),
-                    "unit of {0:s}".format(k),
+                    f"unit of {k:s}",
                 )
             )
 
     # add aliases
     for e, v in enumerate(tab._aliases.items()):
-        cards.append(("ALIAS{0:d}".format(e + 1), "=".join(v), ""))
+        cards.append((f"ALIAS{e + 1:d}", "=".join(v), ""))
 
     if tab.header["NAME"] not in ["", "None", None, "No Name"]:
         cards.append(("EXTNAME", tab.header["NAME"], ""))
@@ -472,7 +470,7 @@ def _ascii_read_header(
     if hasattr(fname, "read"):
         stream = fname
     else:
-        stream = open(fname, "r")
+        stream = open(fname)
 
     header = {}
     alias = {}
@@ -651,7 +649,7 @@ def _hdf5_write_data(
             if not silent:
                 print(
                     (
-                        "Warning: Table {0} does not exists.\n"
+                        "Warning: Table {} does not exists.\n"
                         " A new table will be created"
                     ).format(where + name)
                 )
@@ -680,7 +678,7 @@ def _hdf5_write_data(
 
         # add aliases
         for i, (k, v) in enumerate(aliases.items()):
-            t.attrs["ALIAS{0:d}".format(i)] = "{0:s}={1:s}".format(k, v)
+            t.attrs[f"ALIAS{i:d}"] = f"{k:s}={v:s}"
 
         t.flush()
 
@@ -722,7 +720,7 @@ def _hdf5_read_data(filename, tablename=None, silent=False, *args, **kwargs):
         else:
             node = source.get_node(tablename)
     if not silent:
-        print("\tLoading table: {0}".format(tablename))
+        print(f"\tLoading table: {tablename}")
 
     hdr = {}
     aliases = {}
@@ -741,15 +739,15 @@ def _hdf5_read_data(filename, tablename=None, silent=False, *args, **kwargs):
     if node.attrs["TITLE"] not in empty_name:
         hdr["NAME"] = node.attrs["TITLE"]
     else:
-        hdr["NAME"] = "{0:s}/{1:s}".format(filename, node.name)
+        hdr["NAME"] = f"{filename:s}/{node.name:s}"
 
     # read column meta
     units = {}
     desc = {}
 
     for k, colname in enumerate(node.colnames):
-        _u = getattr(node.attrs, "FIELD_{0:d}_UNIT".format(k), None)
-        _d = getattr(node.attrs, "FIELD_{0:d}_DESC".format(k), None)
+        _u = getattr(node.attrs, f"FIELD_{k:d}_UNIT", None)
+        _d = getattr(node.attrs, f"FIELD_{k:d}_DESC", None)
         if _u is not None:
             units[colname] = _u
         if _d is not None:
@@ -793,7 +791,7 @@ def _ascii_generate_header(tab, comments="#", delimiter=" ", commentedHeader=Tru
 
     # table header
     length = max(map(len, tab.header.keys()))
-    fmt = "{{0:s}} {{1:{0:d}s}}\t{{2:s}}".format(length)
+    fmt = f"{{0:s}} {{1:{length:d}s}}\t{{2:s}}"
     for k, v in tab.header.items():
         for vk in v.split("\n"):
             if len(vk) > 0:
@@ -802,7 +800,7 @@ def _ascii_generate_header(tab, comments="#", delimiter=" ", commentedHeader=Tru
     # column metadata
     hdr.append(comments)  # add empty line
     length = max(map(len, tab.keys()))
-    fmt = "{{0:s}}{{0:s}} {{1:{0:d}s}}\t{{2:s}}\t{{3:s}}".format(length)
+    fmt = f"{{0:s}}{{0:s}} {{1:{length:d}s}}\t{{2:s}}\t{{3:s}}"
     for colname in tab.keys():
         unit = tab._units.get(colname, "None")
         desc = tab._desc.get(colname, "None")
@@ -812,14 +810,14 @@ def _ascii_generate_header(tab, comments="#", delimiter=" ", commentedHeader=Tru
     if len(tab._aliases) > 0:
         hdr.append(comments)  # add empty line
         for k, v in tab._aliases.items():
-            hdr.append("{0:s} alias\t{1:s}={2:s}".format(comments, k, v))
+            hdr.append(f"{comments:s} alias\t{k:s}={v:s}")
 
     # column names
     hdr.append(comments)
     if commentedHeader:
-        hdr.append("{0:s} {1:s}".format(comments, delimiter.join(tab.keys())))
+        hdr.append(f"{comments:s} {delimiter.join(tab.keys()):s}")
     else:
-        hdr.append("{0:s}".format(delimiter.join(tab.keys())))
+        hdr.append(f"{delimiter.join(tab.keys()):s}")
 
     return "\n".join(hdr)
 
@@ -850,7 +848,7 @@ def _latex_writeto(filename, tab, comments="%"):
     # add caption
     tabname = tab.header.get("NAME", None)
     if tabname not in ["", None, "None"]:
-        txt += "\\caption{{{0:s}}}\n".format(tabname)
+        txt += f"\\caption{{{tabname:s}}}\n"
 
     # tabular
     txt += "\\begin{{tabular}}{{{0:s}}}\n".format("c" * tab.ncols)
@@ -867,7 +865,7 @@ def _latex_writeto(filename, tab, comments="%"):
         txt += r"\% notes \n\\begin{scriptsize}\n"
         for e, (k, v) in enumerate(tab._desc.items()):
             if v not in (None, "None", "none", ""):
-                txt += "{0:d} {1:s}: {2:s} \\\\\n".format(e, k, v)
+                txt += f"{e:d} {k:s}: {v:s} \\\\\n"
         txt += "\\end{scriptsize}\n"
     txt += "\\end{table}\n"
     if hasattr(filename, "write"):
@@ -997,7 +995,7 @@ def __indent__(
         rowSeparator = ""
 
     # make the format
-    fmt = ["{{{0:d}:{1:d}s}}".format(k, len_) for (k, len_) in enumerate(length)]
+    fmt = [f"{{{k:d}:{len_:d}s}}" for (k, len_) in enumerate(length)]
     fmt = delim.join(fmt) + endline
     # write the string
     txt = rowSeparator
@@ -1036,7 +1034,7 @@ def pprint_rec_entry(data, num=0, keys=None):
         _keys = keys
 
     length = max(map(len, _keys))
-    fmt = "{{0:{0:d}s}}: {{1}}".format(length)
+    fmt = f"{{0:{length:d}s}}: {{1}}"
     data = data[num]
 
     for k in _keys:
@@ -1153,7 +1151,7 @@ def elementwise(func):
     return wrapper
 
 
-class AstroHelpers(object):
+class AstroHelpers:
     """Helpers related to astronomy data"""
 
     @staticmethod
@@ -1211,7 +1209,7 @@ class AstroHelpers(object):
         d = int(sign * val)
         m = int((sign * val - d) * 60.0)
         s = ((sign * val - d) * 60.0 - m) * 60.0
-        return "{0}{1}{2}{3}{4}".format(sign * d, delim, m, delim, s)
+        return f"{sign * d}{delim}{m}{delim}{s}"
 
     @staticmethod
     @elementwise
@@ -1238,7 +1236,7 @@ class AstroHelpers(object):
         h = int(sign * val / 45.0 * 3.0)  # * 24 / 360
         m = int((sign * val / 45.0 * 3.0 - h) * 60.0)
         s = ((sign * val / 45.0 * 3.0 - h) * 60.0 - m) * 60.0
-        return "{0}{1}{2}{3}{4}".format(sign * h, delim, m, delim, s)
+        return f"{sign * h}{delim}{m}{delim}{s}"
 
     @staticmethod
     @elementwise
@@ -1540,7 +1538,7 @@ class AstroHelpers(object):
 # ==============================================================================
 # SimpleTable -- provides table manipulations with limited storage formats
 # ==============================================================================
-class SimpleTable(object):
+class SimpleTable:
     """Table class that is designed to be the basis of any format wrapping
     around numpy recarrays
 
@@ -1684,7 +1682,7 @@ class SimpleTable(object):
                 self._units.update(units)
                 self._desc.update(desc)
             else:
-                raise Exception("Format {0:s} not handled".format(extension))
+                raise Exception(f"Format {extension:s} not handled")
         elif isinstance(fname, np.ndarray):
             self.data = fname
             self.header = {}
@@ -1709,7 +1707,7 @@ class SimpleTable(object):
             self.data = np.array(fname)
             self.header = {}
         else:
-            raise Exception("Type {0!s:s} not handled".format(type(fname)))
+            raise Exception(f"Type {type(fname)!s:s} not handled")
         if "NAME" not in self.header:
             if type(fname) not in basestring:
                 self.header["NAME"] = "No Name"
@@ -1742,7 +1740,7 @@ class SimpleTable(object):
             _keys: List[str] = cast(List[str], keys)
 
         length = max(map(len, _keys))
-        fmt = "{{0:{0:d}s}}: {{1}}".format(length)
+        fmt = f"{{0:{length:d}s}}: {{1}}"
         data = self[num]
 
         for k in _keys:
@@ -1929,7 +1927,7 @@ class SimpleTable(object):
                 **kwargs,
             )
         else:
-            raise Exception("Format {0:s} not handled".format(extension))
+            raise Exception(f"Format {extension:s} not handled")
 
     def to_records(self, **kwargs):
         """Construct a numpy record array from this dataframe"""
@@ -2141,7 +2139,7 @@ class SimpleTable(object):
             The column being aliased
         """
         if colname not in self.keys():
-            raise KeyError("Column {0:s} does not exist".format(colname))
+            raise KeyError(f"Column {colname:s} does not exist")
         self._aliases[alias] = colname
 
     def _clean_orphan_aliases(self):
@@ -2159,7 +2157,7 @@ class SimpleTable(object):
         """
         _colname = self.resolve_alias(colname)
         if _colname not in list(self.keys()):  # pyright: ignore
-            raise KeyError("Column {0:s} does not exist".format(colname))
+            raise KeyError(f"Column {colname:s} does not exist")
 
         return tuple([k for (k, v) in self._aliases.items() if (v == _colname)])  # pyright: ignore
 
@@ -2177,7 +2175,7 @@ class SimpleTable(object):
             return [self.resolve_alias(k) for k in colname]
         else:
             if self.caseless is True:
-                maps = dict([(k.lower(), v) for k, v in self._aliases.items()])
+                maps = {k.lower(): v for k, v in self._aliases.items()}
                 maps.update((k.lower(), k) for k in self.keys())  # pyright: ignore
                 return maps.get(colname.lower(), colname)
             else:
@@ -2270,7 +2268,7 @@ class SimpleTable(object):
                 _keys += self.keys(k)  # pyright: ignore
             return _keys
         else:
-            msg = "Unexpected type {0} for regexp".format(type(regexp))
+            msg = f"Unexpected type {type(regexp)} for regexp"
             raise ValueError(msg)
 
     @property
@@ -2443,13 +2441,11 @@ class SimpleTable(object):
 
     def iterkeys(self):
         """Iterator over the columns of the table"""
-        for k in self.colnames or []:
-            yield k
+        yield from self.colnames or []
 
     def itervalues(self):
         """Iterator over the lines of the table"""
-        for line in self.data:
-            yield line
+        yield from self.data
 
     def items(self):
         """Iterator on the (key, value) pairs"""
@@ -2471,7 +2467,7 @@ class SimpleTable(object):
         s += "\n\nHeader:\n"
         vals = list(self.header.items())
         length = max(map(len, self.header.keys()))
-        fmt = "\t{{0:{0:d}s}} {{1}}\n".format(length)
+        fmt = f"\t{{0:{length:d}s}} {{1}}\n"
         for k, v in vals:
             s += fmt.format(k, v)
 
@@ -2497,7 +2493,7 @@ class SimpleTable(object):
         if len(self._aliases) > 0:
             print("\nTable contains alias(es):")
             for k, v in self._aliases.items():
-                print("\t{0:s} --> {1:s}".format(k, v))
+                print(f"\t{k:s} --> {v:s}")
 
     def __repr__(self):
         s = object.__repr__(self)
@@ -2662,7 +2658,7 @@ class SimpleTable(object):
             lsuffix, rsuffix = rsuffix, lsuffix
             left_on, right_on = right_on, left_on
         else:
-            msg = "join type not supported: {}, only left/right".format(how)
+            msg = f"join type not supported: {how}, only left/right"
             raise ValueError(msg)
 
         right_keys = list(right.keys() or [])
@@ -2872,7 +2868,7 @@ class SimpleTable(object):
 
         p = [self[k] for k in names]
 
-        _names = set([self.resolve_alias(k) for k in names])
+        _names = {self.resolve_alias(k) for k in names}
         if _names:
             self.data = recfunctions.drop_fields(self.data, _names)  # pyright: ignore
         for k in names:
@@ -3164,13 +3160,13 @@ class AstroTable(SimpleTable):
 
     def set_RA(self, val):
         """Set the column that defines RA coordinates"""
-        msg = "column name {} not found in the table".format(val)
+        msg = f"column name {val} not found in the table"
         assert val in self, msg
         self._ra_name = val
 
     def set_DEC(self, val):
         """Set the column that defines DEC coordinates"""
-        msg = "column name {} not found in the table".format(val)
+        msg = f"column name {val} not found in the table"
         assert val in self, msg
         self._dec_name = val
 
@@ -3214,7 +3210,7 @@ class AstroTable(SimpleTable):
         s += "\n\nHeader:\n"
         vals = list(self.header.items())
         length = max(map(len, self.header.keys()))
-        fmt = "\t{{0:{0:d}s}} {{1}}\n".format(length)
+        fmt = f"\t{{0:{length:d}s}} {{1}}\n"
         for k, v in vals:
             s += fmt.format(k, v)
 
@@ -3229,7 +3225,7 @@ class AstroTable(SimpleTable):
         lengths = list(map(max, (zip(*lengths))))
 
         if (self._ra_name is not None) & (self._dec_name is not None):
-            s += "\nPosition coordinate columns: {0}, {1}\n".format(
+            s += "\nPosition coordinate columns: {}, {}\n".format(
                 self._ra_name, self._dec_name
             )
 
@@ -3245,7 +3241,7 @@ class AstroTable(SimpleTable):
         if len(self._aliases) > 0:
             print("\nTable contains alias(es):")
             for k, v in self._aliases.items():
-                print("\t{0:s} --> {1:s}".format(k, v))
+                print(f"\t{k:s} --> {v:s}")
 
     def coneSearch(self, ra, dec, r, outtype=0):
         """Perform a cone search on a table
@@ -3418,7 +3414,7 @@ class AstroTable(SimpleTable):
         return tab
 
 
-class stats(object):
+class stats:
     @staticmethod
     def has_nan(v):
         return True in np.isnan(v)

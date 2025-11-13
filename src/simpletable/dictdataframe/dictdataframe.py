@@ -133,7 +133,7 @@ class DictDataFrame(dict):
 
     def __repr__(self) -> str:
         """Return a string representation of the DataFrame."""
-        txt = ["DataFrame ({0:s})\n".format(pretty_size_print(self.nbytes))]
+        txt = [f"DataFrame ({pretty_size_print(self.nbytes):s})\n"]
         for k, v in self.items():
             try:
                 txt.append(str((k, v.dtype, v.shape)))
@@ -162,12 +162,12 @@ class DictDataFrame(dict):
     @property
     def dtype(self) -> Dict[str | Hashable, np.dtype]:
         """the dtypes of each column of the dataset"""
-        return dict((k, v.dtype) for (k, v) in self.items())
+        return {k: v.dtype for (k, v) in self.items()}
 
     @property
     def shape(self) -> Dict[str | Hashable, Tuple[int, ...]]:
         """dict of shapes"""
-        return dict((k, v.shape) for (k, v) in self.items())
+        return {k: v.shape for (k, v) in self.items()}
 
     def groupby(
         self, key: str | Hashable
@@ -305,11 +305,9 @@ class DictDataFrame(dict):
 
         if caseless:
             _keys = "".join([k.lower() for k in keys])
-            df = self.__class__(
-                dict((k, v) for k, v in self.items() if (k.lower() in _keys))
-            )
+            df = self.__class__({k: v for k, v in self.items() if (k.lower() in _keys)})
         else:
-            df = self.__class__(dict((k, v) for k, v in self.items() if k in keys))
+            df = self.__class__({k: v for k, v in self.items() if k in keys})
         return df
 
     def multigroupby(
@@ -504,12 +502,12 @@ class DictDataFrame(dict):
         if prefix is None:
             for name in columns_other:
                 if name in self:
-                    msg = "Field {0:s} already exists.".format(name)
+                    msg = f"Field {name:s} already exists."
                     raise ValueError(msg)
             else:
                 for name in columns_other:
-                    new_name = "{0:s}{1:s}".format(prefix, name)
-                    msg = "Field {0:s} already exists.".format(new_name)
+                    new_name = f"{prefix:s}{name:s}"
+                    msg = f"Field {new_name:s} already exists."
                     if new_name in self:
                         raise ValueError(msg)
 
@@ -549,7 +547,7 @@ class DictDataFrame(dict):
                     # forget the mask if we do not need it
                     data = data.data
             if prefix:
-                new_name = "{0:s}{1:s}".format(prefix, column_name)
+                new_name = f"{prefix:s}{column_name:s}"
             else:
                 new_name = column_name
             self[new_name] = data

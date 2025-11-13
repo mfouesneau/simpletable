@@ -219,7 +219,7 @@ class DataFrame(pd.DataFrame):
                 )
             return matches
         else:
-            msg = "Unexpected type {0} for regexp".format(type(regexp))
+            msg = f"Unexpected type {type(regexp)} for regexp"
             raise ValueError(msg)
 
     def pandas_info(
@@ -304,7 +304,7 @@ class DataFrame(pd.DataFrame):
             txt.append("Header:")
             ignore = ("aliases", "units")
             length = max([len(str(k)) for k in self.attrs.keys() if k not in ignore])
-            fmt = "\t{{0:{0:d}s}} {{1}}".format(length)
+            fmt = f"\t{{0:{length:d}s}} {{1}}"
             for k, v in self.attrs.items():
                 if k not in ignore:
                     txt.append(fmt.format(k, str(v).strip()))
@@ -325,7 +325,7 @@ class DataFrame(pd.DataFrame):
         if aliases:
             txt.append("Table contains alias(es):")
             for k, v in aliases.items():
-                txt.append("\t{0:s} --> {1:s}".format(k, v))
+                txt.append(f"\t{k:s} --> {v:s}")
         print("\n".join(txt))
 
     @classmethod

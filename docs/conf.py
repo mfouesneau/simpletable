@@ -137,7 +137,7 @@ def shorten_autosummary_titles(app: Sphinx, *args: Any) -> None:
             continue
 
         path = os.path.join(autosummary_dir, filename)
-        with open(path, "r") as f:
+        with open(path) as f:
             lines = f.readlines()
 
         # skip if missing a title or if a module/class
