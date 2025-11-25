@@ -20,19 +20,11 @@ import sys
 import itertools
 import operator
 from typing import (
-    Iterable,
-    Dict,
-    Hashable,
     Optional,
-    Tuple,
-    List,
-    Generator,
-    Iterator,
     Callable,
-    Sequence,
     Any,
-    ItemsView,
 )
+from collections.abc import Iterable, Hashable, Generator, Iterator, Sequence, ItemsView
 
 from . import convert
 from .helpers import pretty_size_print
@@ -105,7 +97,7 @@ class DictDataFrame(dict):
         return dict.__len__(self)
 
     @classmethod
-    def from_lines(cls, iterable: Iterable[Dict]) -> "DictDataFrame":
+    def from_lines(cls, iterable: Iterable[dict]) -> "DictDataFrame":
         """Create a DataFrame object from its lines instead of columns
 
         Parameters
@@ -160,18 +152,18 @@ class DictDataFrame(dict):
                 return self.__class__({a: v[k] for a, v in self.items()})
 
     @property
-    def dtype(self) -> Dict[str | Hashable, np.dtype]:
+    def dtype(self) -> dict[str | Hashable, np.dtype]:
         """the dtypes of each column of the dataset"""
         return {k: v.dtype for (k, v) in self.items()}
 
     @property
-    def shape(self) -> Dict[str | Hashable, Tuple[int, ...]]:
+    def shape(self) -> dict[str | Hashable, tuple[int, ...]]:
         """dict of shapes"""
         return {k: v.shape for (k, v) in self.items()}
 
     def groupby(
         self, key: str | Hashable
-    ) -> Iterator[Tuple[str | Hashable, "DictDataFrame"]]:
+    ) -> Iterator[tuple[str | Hashable, "DictDataFrame"]]:
         """create an iterator which returns (key, DataFrame) grouped by each
         value of key(value)"""
         for k, index in self.arg_groupby(key):
@@ -180,7 +172,7 @@ class DictDataFrame(dict):
 
     def arg_groupby(
         self, key: str | Hashable
-    ) -> Iterator[Tuple[str | Hashable, List[int]]]:
+    ) -> Iterator[tuple[str | Hashable, list[int]]]:
         """create an iterator which returns (key, index) grouped by each
         value of key(value)"""
         val = self.evalexpr(key)
@@ -217,7 +209,7 @@ class DictDataFrame(dict):
         return dict.items(self)
 
     def where(
-        self, condition: str, condvars: Dict[str, Any] | None = None
+        self, condition: str, condvars: dict[str, Any] | None = None
     ) -> Iterator[Any]:
         """Read table data fulfilling the given `condition`.
         Only the rows fulfilling the `condition` are included in the result.
@@ -312,7 +304,7 @@ class DictDataFrame(dict):
 
     def multigroupby(
         self, key: Sequence[str | Hashable], *args
-    ) -> Generator[Tuple[str | Hashable, "DictDataFrame"], None, None]:
+    ) -> Generator[tuple[str | Hashable, "DictDataFrame"], None, None]:
         """
         Returns nested grouped DataFrames given the multiple keys
 
@@ -332,8 +324,8 @@ class DictDataFrame(dict):
         self,
         func: Callable,
         keys: Sequence[str | Hashable],
-        args: Tuple[Any, ...] = (),
-        kwargs: Dict[str, Any] = {},
+        args: tuple[Any, ...] = (),
+        kwargs: dict[str, Any] = {},
     ):
         """Apply func on groups within the data
 
@@ -555,8 +547,8 @@ class DictDataFrame(dict):
 
 
 def _df_multigroupby(
-    ary: DictDataFrame, *args: Tuple[Any, ...]
-) -> Generator[Tuple[Any, DictDataFrame], None, None] | Any:
+    ary: DictDataFrame, *args: tuple[Any, ...]
+) -> Generator[tuple[Any, DictDataFrame], None, None] | Any:
     """
     Generate nested df based on multiple grouping keys
 
@@ -590,7 +582,7 @@ def _df_multigroupby(
 
 
 def _df_multigroupby_aggregate(
-    pv: DictDataFrame | Dict[Any, Any] | List[Tuple[str | Hashable, Any]],
+    pv: DictDataFrame | dict[Any, Any] | list[tuple[str | Hashable, Any]],
     func: Callable = lambda x: x,
     args=(),
     kwargs={},
@@ -628,9 +620,9 @@ def _df_multigroupby_aggregate(
 
 
 def evalexpr(
-    data: DictDataFrame | Dict[Any, Any],
+    data: DictDataFrame | dict[Any, Any],
     expr: str,
-    exprvars: Dict | None = None,
+    exprvars: dict | None = None,
     dtype: npt.DTypeLike = float,
 ) -> npt.ArrayLike:
     """evaluate expression based on the data and external variables

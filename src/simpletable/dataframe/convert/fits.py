@@ -1,4 +1,4 @@
-from typing import Any, Tuple
+from typing import Any
 from astropy.io import fits
 from astropy.io.fits import Header
 from astropy.io.fits import TableHDU, BinTableHDU
@@ -86,7 +86,7 @@ try:
 
     def from_fits(
         filename: str, extension_number: int = 1
-    ) -> Tuple[npt.NDArray, HeaderInfo]:
+    ) -> tuple[npt.NDArray, HeaderInfo]:
         """Load a DataFrame from a FITS file.
 
         Parameters

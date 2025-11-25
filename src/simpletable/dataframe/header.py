@@ -1,4 +1,5 @@
-from typing import Any, Dict, Hashable
+from typing import Any
+from collections.abc import Hashable
 from dataclasses import dataclass
 
 
@@ -21,7 +22,7 @@ class HeaderInfo:
             comments/description of keywords
     """
 
-    header: Dict[Hashable, Any]
-    alias: Dict[Hashable, str]
-    units: Dict[Hashable, str]
-    comments: Dict[Hashable, str]
+    header: dict[Hashable, Any]
+    alias: dict[Hashable, str]
+    units: dict[Hashable, str]
+    comments: dict[Hashable, str]

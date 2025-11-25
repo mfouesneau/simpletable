@@ -47,7 +47,7 @@ from numpy import deg2rad, rad2deg, sin, cos, sqrt, arcsin, arctan2
 from numpy.lib import recfunctions
 import types
 import operator
-from typing import List, cast
+from typing import cast
 
 iteritems = operator.methodcaller("items")
 itervalues = operator.methodcaller("values")
@@ -1737,7 +1737,7 @@ class SimpleTable:
                 if (re.match(keys, k) is not None)
             ]
         else:
-            _keys: List[str] = cast(List[str], keys)
+            _keys: list[str] = cast(list[str], keys)
 
         length = max(map(len, _keys))
         fmt = f"{{0:{length:d}s}}: {{1}}"

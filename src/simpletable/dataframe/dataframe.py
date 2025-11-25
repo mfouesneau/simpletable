@@ -8,7 +8,8 @@
 
 import sys
 import re
-from typing import Any, Dict, Hashable, Iterable, List, Generator
+from typing import Any
+from collections.abc import Hashable, Iterable, Generator
 import pandas as pd
 import numpy.typing as npt
 from io import TextIOWrapper
@@ -32,7 +33,7 @@ class DataFrame(pd.DataFrame):
 
     def __init__(
         self,
-        data: npt.NDArray | npt.ArrayLike | Iterable | Dict | pd.DataFrame,
+        data: npt.NDArray | npt.ArrayLike | Iterable | dict | pd.DataFrame,
         info: HeaderInfo | None = None,
         caseless: bool = False,
     ):
@@ -167,7 +168,7 @@ class DataFrame(pd.DataFrame):
         regexp: str | Iterable[str] | None = None,
         full_match: bool = False,
         skip_aliases: bool = False,
-    ) -> List[str] | pd.Index:
+    ) -> list[str] | pd.Index:
         """
         Return the data column names or a subset of it
 

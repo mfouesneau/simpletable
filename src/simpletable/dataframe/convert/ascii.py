@@ -1,7 +1,8 @@
 """Export dataframe to ASCII format while preserving attrs"""
 
 import pandas as pd
-from typing import Callable, Hashable, Sequence, List, Tuple, cast
+from typing import Callable, cast
+from collections.abc import Hashable, Sequence
 from pandas.io.common import get_handle
 from pandas._typing import (
     CompressionOptions,
@@ -22,7 +23,7 @@ def ascii_read_header(
     delimiter: str = ",",
     commented_header: bool = True,
     **kwargs,
-) -> Tuple[int, HeaderInfo, List[str]]:
+) -> tuple[int, HeaderInfo, list[str]]:
     """
     Read ASCII/CSV header
 
@@ -263,7 +264,7 @@ def to_csv(
     na_rep: "str" = "",
     float_format: "str | Callable | None" = None,
     columns: "Sequence[Hashable] | None" = None,
-    header: bool | List[str] = True,
+    header: bool | list[str] = True,
     index: bool = True,
     index_label: IndexLabel | None = None,
     mode: str = "w",

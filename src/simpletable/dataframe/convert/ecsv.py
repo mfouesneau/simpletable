@@ -55,7 +55,8 @@ import pandas as pd
 import numpy as np
 import numpy.typing as npt
 import json
-from typing import Union, Dict, Any, Generator
+from typing import Union, Any
+from collections.abc import Generator
 from io import TextIOWrapper
 
 
@@ -79,7 +80,7 @@ def _converter(str_val: str, subtype: str) -> npt.NDArray:
         return np.ma.array(data.astype(subtype), mask=mask)
 
 
-def read_header(fname: str) -> Dict[str, Any]:
+def read_header(fname: str) -> dict[str, Any]:
     """read the header of ECSV file as a dictionary
 
     Parameters
@@ -136,9 +137,9 @@ def read(fname: str, **kwargs) -> pd.DataFrame | Generator[Any, Any, None]:
     """
     header = read_header(fname)
 
-    dtype_mapper: Dict[str, Any] = {"string": str}
+    dtype_mapper: dict[str, Any] = {"string": str}
 
-    dtype: Dict[str, Any] = {
+    dtype: dict[str, Any] = {
         k["name"]: np.dtype(dtype_mapper.get(k["datatype"], k["datatype"]))
         for k in header["datatype"]
     }

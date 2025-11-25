@@ -10,7 +10,7 @@ This module implements a custom `VOTableParser` that uses XML parsing and not ot
 import xml.etree.ElementTree as ET
 from io import IOBase
 from os import PathLike
-from typing import Any, Dict, List, Tuple, Union
+from typing import Any, Union
 
 import numpy as np
 import numpy.typing as npt
@@ -63,7 +63,7 @@ class VOTableParser:
         self.tables = []
         self._parse_tables()
 
-    def _get_namespace(self) -> Dict[str, str]:
+    def _get_namespace(self) -> dict[str, str]:
         """Extract namespace from VOTable root element"""
         # VOTable typically uses namespace like http://www.ivoa.net/xml/VOTable/v1.3
         namespace = {}
@@ -92,7 +92,7 @@ class VOTableParser:
             table_data = self._parse_single_table(table_elem)
             self.tables.append(table_data)
 
-    def _parse_single_table(self, table_elem) -> Dict[str, Any]:
+    def _parse_single_table(self, table_elem) -> dict[str, Any]:
         """Parse a single TABLE element"""
         table_info = {
             "name": table_elem.get("name", "unnamed"),
@@ -126,7 +126,7 @@ class VOTableParser:
 
         return table_info
 
-    def _parse_field(self, field_elem) -> Dict[str, Any]:
+    def _parse_field(self, field_elem) -> dict[str, Any]:
         """Parse FIELD element (column definition)"""
         field_info = {
             "name": field_elem.get("name", ""),
@@ -145,7 +145,7 @@ class VOTableParser:
 
         return field_info
 
-    def _parse_param(self, param_elem) -> Dict[str, Any]:
+    def _parse_param(self, param_elem) -> dict[str, Any]:
         """Parse PARAM element (parameter/metadata)"""
         param_info = {
             "name": param_elem.get("name", ""),
@@ -163,7 +163,7 @@ class VOTableParser:
 
         return param_info
 
-    def _parse_data(self, data_elem, fields: List[Dict]) -> List[List[Any]]:
+    def _parse_data(self, data_elem, fields: list[dict]) -> list[list[Any]]:
         """Parse DATA element - supports TABLEDATA format"""
         tabledata_elem = self._find_element(data_elem, "TABLEDATA")
         if tabledata_elem is None:
@@ -207,7 +207,7 @@ class VOTableParser:
         except ValueError:
             return value
 
-    def get_table_as_dict(self, table_index: int = 0) -> Dict[str, List]:
+    def get_table_as_dict(self, table_index: int = 0) -> dict[str, list]:
         """
         Convert table data to dictionary with column names as keys
 
@@ -277,7 +277,7 @@ def from_votable(
     *,
     table_index: int = 0,
     is_url: bool = False,
-) -> Tuple[pd.DataFrame, HeaderInfo]:
+) -> tuple[pd.DataFrame, HeaderInfo]:
     """Read a VOTable file and return a pandas DataFrame and header information.
 
     Parameters
