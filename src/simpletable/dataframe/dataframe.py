@@ -6,19 +6,19 @@
 - inputs and outputs into various additional formats: FITS, CSV/Ascii, ECSV
 """
 
-import sys
 import re
-from typing import Any
-from collections.abc import Hashable, Iterable, Generator
-import pandas as pd
-import numpy.typing as npt
+import sys
+from collections.abc import Generator, Hashable, Iterable
 from io import TextIOWrapper
+from typing import Any
 
+import numpy.typing as npt
+import pandas as pd
 from pandas._typing import WriteBuffer
 
-from .helpers import pretty_size_print
-from .header import HeaderInfo
 from . import convert
+from .header import HeaderInfo
+from .helpers import pretty_size_print
 
 
 class DataFrame(pd.DataFrame):
@@ -447,7 +447,7 @@ class DataFrame(pd.DataFrame):
     @classmethod
     def from_ecsv(
         cls, fname: str, **kwargs
-    ) -> "DataFrame" | Generator["DataFrame", Any, None]:
+    ) -> "DataFrame | Generator[DataFrame, Any, None]":
         """Read the content of an Enhanced Character Separated Values
 
         Parameters
