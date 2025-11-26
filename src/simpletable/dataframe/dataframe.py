@@ -9,8 +9,9 @@
 import re
 import sys
 from collections.abc import Generator, Hashable, Iterable
-from io import TextIOWrapper
-from typing import Any
+from io import IOBase, TextIOWrapper
+from os import PathLike
+from typing import Any, Literal
 
 import numpy.typing as npt
 import pandas as pd
@@ -47,6 +48,15 @@ class DataFrame(pd.DataFrame):
             self.attrs["units"] = info.units
         self.attrs["caseless"] = caseless
         self._clean_orphan_aliases()
+
+    @property
+    def header(self) -> HeaderInfo:
+        attrs = self.attrs.copy()
+        comments = attrs.pop("comments", {})
+        aliases = attrs.pop("aliases", {})
+        units = attrs.pop("units", {})
+        hdr = HeaderInfo(header=attrs, comments=comments, alias=aliases, units=units)
+        return hdr
 
     @property
     def nrows(self) -> int:
@@ -230,7 +240,7 @@ class DataFrame(pd.DataFrame):
         max_cols: int | None = None,
         memory_usage: bool | str | None = None,
         show_counts: bool | None = None,
-    ):
+    ) -> None:
         """Print a concise summary of a DataFrame.
 
         This method prints information about a DataFrame including
@@ -292,7 +302,13 @@ class DataFrame(pd.DataFrame):
         )
 
     def info(self, header: bool = False):  # pyright: ignore
-        """prints information on the table"""
+        """prints information on the table
+
+        Parameters
+        ----------
+        header : bool, default False
+            If True, print the header information.
+        """
         txt = []
         name = self.attrs.get("NAME", "Noname")
         pprint_nbytes = pretty_size_print(self.nbytes)
@@ -329,32 +345,82 @@ class DataFrame(pd.DataFrame):
                 txt.append(f"\t{k:s} --> {v:s}")
         print("\n".join(txt))
 
-    @classmethod
-    def from_fits(cls, filename: str, extension_number: int = 1) -> "DataFrame":
-        """Load a DataFrame from a FITS file.
-
-        Parameters
-        ----------
-        filename : str
-            The path to the FITS file.
-        extension_number : int, optional
-            The extension number to load, by default 1.
-
-        Returns
-        -------
-        DataFrame
-            The loaded DataFrame.
-        """
-        from_fits = getattr(convert.fits, "from_fits", None)
-        if from_fits is None:
-            raise ImportError("astropy (astropy.io.fits) is not installed")
-        return DataFrame(*from_fits(filename, extension_number))
-
-    if convert.fits.to_fits is not None:
-        to_fits = convert.fits.to_fits
-
     to_ascii = convert.ascii.to_ascii
     to_csv = convert.ascii.to_csv  # pyright: ignore
+
+    if convert.fits.from_fits is not None:
+
+        @classmethod
+        def from_fits(cls, filename: str, extension_number: int = 1) -> "DataFrame":
+            """Load a DataFrame from a FITS file.
+
+            Parameters
+            ----------
+            filename : str
+                The path to the FITS file.
+            extension_number : int, optional
+                The extension number to load, by default 1.
+
+            Returns
+            -------
+            DataFrame
+                The loaded DataFrame.
+            """
+            df, hdr = convert.fits.from_fits(filename, extension_number)
+            return cls(df, hdr)
+
+    if convert.fits.to_fits is not None:
+
+        def to_fits(
+            self,
+            filename: str,
+            header_info: HeaderInfo | None = None,
+            output_verify: str = "exception",
+            checksum: bool = False,
+            index: bool = True,
+            overwrite: bool = False,
+            append: bool = False,
+            **kwargs,
+        ) -> None:
+            """Save a DataFrame to a FITS file.
+
+            Parameters
+            ----------
+            filename : str
+                The path to the FITS file.
+            header_info : HeaderInfo | None, optional
+                Header information to save with the FITS file
+                by default None and taken from data.attrs
+                override data.attrs if provided
+            output_verify : str
+                Output verification option.  Must be one of ``"fix"``, ``"silentfix"``,
+                ``"ignore"``, ``"warn"``, or ``"exception"``.  May also be any
+                combination of ``"fix"`` or ``"silentfix"`` with ``"+ignore"``,
+                ``+warn``, or ``+exception" (e.g. ``"fix+warn"``).  See :ref:`verify`
+                for more info.
+            checksum : bool, optional
+                If `True`, adds both ``DATASUM`` and ``CHECKSUM`` cards to the
+                headers of all HDU's written to the file
+            index : bool, optional
+                If `True`, includes the index in the FITS file. Default is `True`.
+            append : bool, optional
+                If `True`, appends the DataFrame to the FITS file. Default is `False`.
+            overwrite : bool, optional
+                If `True`, overwrites the DataFrame in the FITS file. Default is `False`.
+            **kwargs: dict
+                Additional keyword arguments to pass to the FITS writer.
+            """
+            convert.fits.to_fits(
+                self,
+                filename,
+                header_info=self.header,
+                output_verify=output_verify,
+                checksum=checksum,
+                index=index,
+                overwrite=overwrite,
+                append=append,
+                **kwargs,
+            )
 
     @classmethod
     def from_csv(
@@ -469,7 +535,7 @@ class DataFrame(pd.DataFrame):
         fname: str | TextIOWrapper,
         mode: str = "w",
         **meta,
-    ):
+    ) -> None:
         """output data into ecsv file
 
         Parameters
@@ -484,6 +550,118 @@ class DataFrame(pd.DataFrame):
             meta data to be written to the header.
         """
         convert.ecsv.write(df, fname, mode=mode, **meta)
+
+    if convert.hdf.from_hdf5 is not None:
+
+        @classmethod
+        def from_hdf5(
+            cls,
+            filename: str,
+            tablename: str | None = None,
+            *,
+            silent: bool = True,
+            **kwargs,
+        ) -> "DataFrame":
+            """Read a table from an HDF5 file.
+
+            Parameters
+            ----------
+            filename: str
+                file to read from
+
+            tablename: str
+                node containing the table
+
+            silent: bool
+                skip verbose messages
+
+            Returns
+            -------
+
+            df: DataFrame
+                dataframe containing the table data
+            """
+            data, hdr = convert.hdf.from_hdf5(
+                filename, tablename, silent=silent, **kwargs
+            )
+            return cls(data, hdr)
+
+    if convert.hdf.to_hdf5 is not None:
+
+        def to_hdf5(
+            self,
+            filename: str | PathLike,
+            *,
+            tablename: str | None = None,
+            mode: Literal["r", "w", "a", "r+"] = "w",
+            append: bool = False,
+            **kwargs,
+        ) -> None:
+            """
+            Write a pandas DataFrame to an HDF5 file.
+
+            Parameters
+            ----------
+            filename : str or tables.File or PathLike
+                The filename or open HDF5 file to write to.
+            tablename : str, optional
+                The name of the table to write to.
+            mode : {'r', 'w', 'a', 'r+'}, default 'w'
+                The mode to open the file in.
+            append : bool, default False
+                Whether to append data to an existing file.
+            **kwargs
+                Additional keyword arguments to pass to tables.open_file.
+
+            Raises
+            ------
+            Exception
+                If the HDF backend does not implement stream.
+            tables.FileModeError
+                If the file is already opened in a different mode.
+            ValueError
+                If something went wrong without much information from pytables.
+            """
+            convert.hdf.to_hdf5(
+                self.data,
+                filename,
+                tablename=tablename,
+                header_info=self.header,
+                mode=mode,
+                append=append,
+                **kwargs,
+            )
+
+    if convert.votable.from_votable is not None:
+
+        @classmethod
+        def from_votable(
+            cls,
+            fname: str | bytes | IOBase | PathLike,
+            *,
+            table_index: int = 0,
+            is_url: bool = False,
+        ) -> "DataFrame":
+            """Read a VOTable file and return a pandas DataFrame and header information.
+
+            Parameters
+            ----------
+            fname : str, bytes, IOBase, PathLike
+                The filename or file-like object to read.
+            table_index : int, optional
+                The index of the table to read, by default 0.
+            is_url : bool, optional
+                Whether the file is a URL, by default False.
+
+            Returns
+            -------
+            df: DataFrame
+                Dataframe from VOTable file.
+            """
+            df, hdr = convert.votable.from_votable(
+                fname, table_index=table_index, is_url=is_url
+            )
+            return cls(df, hdr)
 
 
 def testing():

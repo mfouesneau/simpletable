@@ -1,5 +1,3 @@
-from . import fits
-from . import ascii
-from . import ecsv
+from . import ascii, ecsv, fits, hdf, votable
 
-__all__ = ["fits", "ascii", "ecsv"]
+__all__ = ["fits", "ascii", "ecsv", "votable", "hdf"]
